@@ -1,0 +1,61 @@
+$date
+	Thu Mar 13 14:49:51 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module tb $end
+$var wire 32 ! inst [31:0] $end
+$var parameter 32 " WIDTH $end
+$var reg 32 # readAddr [31:0] $end
+$scope module im $end
+$var wire 32 $ readAddr [31:0] $end
+$var wire 32 % inst [31:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b100000 "
+$end
+#0
+$dumpvars
+b10100000000010100010011 %
+b0 $
+b0 #
+b10100000000010100010011 !
+$end
+#10000
+b101000000000010110010011 !
+b101000000000010110010011 %
+b100 #
+b100 $
+#20000
+b110000000000000011101111 !
+b110000000000000011101111 %
+b1000 #
+b1000 $
+#30000
+b110001100000000011000010011 !
+b110001100000000011000010011 %
+b1100 #
+b1100 $
+#40000
+b11001100011 !
+b11001100011 %
+b10000 #
+b10000 $
+#50000
+b101101010000011000110011 !
+b101101010000011000110011 %
+b10100 #
+b10100 $
+#60000
+b11111111100111111111000001101111 !
+b11111111100111111111000001101111 %
+b11000 #
+b11000 $
+#70000
