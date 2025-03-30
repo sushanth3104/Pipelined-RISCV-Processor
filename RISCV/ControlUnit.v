@@ -1,14 +1,15 @@
 module ControlUnit(
     input [6:0]opcode,
     input [2:0]func3,
-    input func7_5,Zero,
+    input func7_5,
     output [3:0]ALUCtl,
     output [1:0]ResultSrc,
     output [1:0]ImmSrc,
-    output MemWrite,ALUSrc,RegWrite,PCSrc
+    output Branch,Jump,
+    output MemWrite,ALUSrc,RegWrite
 );
 
-wire Branch,Jump,AndOut;
+
 wire [1:0]ALUOp;
 
 
@@ -32,9 +33,6 @@ ALUDecoder ALUDecoder(
     .ALUCtl(ALUCtl)
 );
 
-
-and and_ControlUnit(AndOut,Zero,Branch);
-or or_ControlUnit(PCSrc,Jump,AndOut);
 
 
 endmodule

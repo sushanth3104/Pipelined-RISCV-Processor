@@ -1,4 +1,4 @@
-`include "RISCV.v"
+`include "PipelineRISCV.v"
 `timescale 1ns/1ps
 
 module tb;
@@ -45,11 +45,11 @@ module tb;
     assign t6 = riscv_DUT.RegisterFile.regfile[31];
 
 
-    assign max = {riscv_DUT.DataMemory.mem[43],riscv_DUT.DataMemory.mem[42],riscv_DUT.DataMemory.mem[41],riscv_DUT.DataMemory.mem[40]};
-    assign min = {riscv_DUT.DataMemory.mem[47],riscv_DUT.DataMemory.mem[47],riscv_DUT.DataMemory.mem[45],riscv_DUT.DataMemory.mem[44]};
+    //assign max = {riscv_DUT.DataMemory.mem[43],riscv_DUT.DataMemory.mem[42],riscv_DUT.DataMemory.mem[41],riscv_DUT.DataMemory.mem[40]};
+    //assign min = {riscv_DUT.DataMemory.mem[47],riscv_DUT.DataMemory.mem[47],riscv_DUT.DataMemory.mem[45],riscv_DUT.DataMemory.mem[44]};
 
 
-    RISCV riscv_DUT(clk,reset);
+    PipelineRISCV riscv_DUT(clk,reset);
 
 
 
