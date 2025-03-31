@@ -11,6 +11,7 @@
 `include "Mux2x1.v"
 `include "Mux3x1.v"
 `include "PipelineReg.v"
+`include "HazardUnit.v"
 
 
 
@@ -54,10 +55,8 @@ wire [WIDHT-1:0] ALUResultM,WriteDataM,PCPlus4M;
 wire RegWriteM,MemWriteM;
 wire [1:0]ResultSrcM;
 
-assign WriteDataE = RD2E;
+assign WriteDataE = ForwardB;
 
-
-assign SrcAE = RD1E;
 
 // Execute-Memory Signals
 
@@ -77,11 +76,11 @@ assign  {InstrD,PCD,PCPlus4D} = DecodeOutData ;
 
 
 // Execute Signals
-wire [164:0] ExecuteInData,ExecuteOutData;
+wire [174:0] ExecuteInData,ExecuteOutData;
 wire [10:0] ExecuteInControl,ExecuteOutControl;
 
-assign ExecuteInData = {RD1D,RD2D,PCD,RdD,ImmExtD,PCPlus4D};
-assign {RD1E,RD2E,PCE,RdE,ImmExtE,PCPlus4E} = ExecuteOutData ;
+assign ExecuteInData = {RD1D,RD2D,PCD,Rs1D,Rs2D,RdD,ImmExtD,PCPlus4D};
+assign {RD1E,RD2E,PCE,Rs1E,Rs2E,RdE,ImmExtE,PCPlus4E} = ExecuteOutData ;
 
 assign ExecuteInControl = {RegWriteD,ResultSrcD,MemWriteD,JumpD,BranchD,ALUCtlD,ALUSrcD};
 assign {RegWriteE,ResultSrcE,MemWriteE,JumpE,BranchE,ALUCtlE,ALUSrcE} = ExecuteOutControl ;
@@ -108,6 +107,23 @@ assign  {ALUResultW,ReadDataW,RdW,PCPlus4W} = WriteBackOutData ;
 
 assign WriteBackInControl = {RegWriteM,ResultSrcM};
 assign  {RegWriteW,ResultSrcW} = WriteBackOutControl ;
+
+
+// Added for Forwarding 
+
+wire [4:0]Rs1D,Rs2D;
+wire [4:0] Rs1E,Rs2E;
+
+assign Rs1D = InstrD[19:15];
+assign Rs2D = InstrD[24:20];
+
+wire [1:0]ForwardAE,ForwardBE;
+
+wire [WIDHT-1:0] ForwardA,ForwardB; // Mux Data out Signals
+
+assign SrcAE = ForwardA;
+
+
 
 
 
@@ -191,7 +207,7 @@ ImmExtnd ImmExtnd(
 
 
 PipelineReg #(
-    .WIDTH(176)
+    .WIDTH(186)
 ) Execute(
     .clk(clk),
     .rst(reset),
@@ -205,10 +221,29 @@ PipelineReg #(
 and AndGate(AndOut,BranchE,ZeroE);
 or OrGate(PCSrcE,AndOut,JumpE);
 
+
+// For Forwading 
+
+Mux3x1 FA(.A(RD1E),
+    .B(ResultW),
+    .C(ALUResultM),
+    .S(ForwardAE),
+    .Y(ForwardA)
+);
+
+Mux3x1 FB(.A(RD2E),
+    .B(ResultW),
+    .C(ALUResultM),
+    .S(ForwardBE),
+    .Y(ForwardB)
+);
+
+
+
 Mux2x1 #(
     .WIDTH(WIDHT)
 ) Mux2x1_ALUSrc(
-    .A(RD2E),
+    .A(ForwardB),
     .B(ImmExtE),
     .S(ALUSrcE),
     .Y(SrcBE)
@@ -275,6 +310,19 @@ Mux3x1 #(
     .Y(ResultW)
 );
 
+
+
+// Hazard Unit Logic
+HazardUnit HazardUnit(
+    .Rs1E(Rs1E),
+    .Rs2E(Rs2E),
+    .RdM(RdM),
+    .RdW(RdW),
+    .RegWriteM(RegWriteM),
+    .RegWriteW(RegWriteW),
+    .ForwardAE(ForwardAE),
+    .ForwardBE(ForwardBE)
+);
 
 
 

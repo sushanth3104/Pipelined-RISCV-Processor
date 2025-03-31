@@ -53,6 +53,7 @@ module tb;
 
 
 
+
     initial begin
 
         $dumpfile("tb.vcd");
@@ -68,6 +69,14 @@ module tb;
         reset = 1;
 
         #5 reset = 0;
+
+        riscv_DUT.RegisterFile.regfile[20] = -2; // s4
+        riscv_DUT.RegisterFile.regfile[21] = 10; // s5
+        riscv_DUT.RegisterFile.regfile[19] = 12; // s3
+        riscv_DUT.RegisterFile.regfile[31] = 17; // t6
+        riscv_DUT.RegisterFile.regfile[7] = 56; // t2
+
+
 
 
 
