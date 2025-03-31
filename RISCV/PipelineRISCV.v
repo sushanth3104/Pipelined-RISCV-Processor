@@ -26,6 +26,96 @@ wire PCSrcE;
 
 wire [WIDHT-1:0] InstrD,PCD,PCPlus4D;
 
+
+
+// Fetch-Decode Signals
+
+wire [WIDHT-1:0]ResultW,ImmExtD,RD1D,RD2D;
+wire RegWriteD,MemWriteD,JumpD,BranchD,ALUSrcD,RegWriteW;
+wire [1:0]ResultSrcD,ImmSrcD;
+wire [3:0]ALUCtlD;
+
+wire [4:0]RdD,RdE,RdW,RdM;
+
+wire [WIDHT-1:0] RD1E,RD2E,PCE,ImmExtE,PCPlus4E;
+wire RegWriteE,MemWriteE,JumpE,BranchE,ALUSrcE;
+wire [1:0]ResultSrcE;
+wire [3:0]ALUCtlE;
+
+
+assign RdD = InstrD[11:7];
+
+// Decode-Execute Signals
+
+wire [WIDHT-1:0] SrcAE,SrcBE,WriteDataE,ALUResultE;
+wire ZeroE,AndOut;
+
+wire [WIDHT-1:0] ALUResultM,WriteDataM,PCPlus4M;
+wire RegWriteM,MemWriteM;
+wire [1:0]ResultSrcM;
+
+assign WriteDataE = RD2E;
+
+
+assign SrcAE = RD1E;
+
+// Execute-Memory Signals
+
+wire [1:0]ResultSrcW;
+wire [WIDHT-1:0] ReadDataM,ReadDataW,ALUResultW,PCPlus4W;
+
+
+
+// Pipeline Registe Signals : Control + Data
+
+// Decode Signals
+
+wire [95:0] DecodeInData,DecodeOutData;
+
+assign DecodeInData = {InstrF,PCF,PCPlus4F};
+assign  {InstrD,PCD,PCPlus4D} = DecodeOutData ;
+
+
+// Execute Signals
+wire [164:0] ExecuteInData,ExecuteOutData;
+wire [10:0] ExecuteInControl,ExecuteOutControl;
+
+assign ExecuteInData = {RD1D,RD2D,PCD,RdD,ImmExtD,PCPlus4D};
+assign {RD1E,RD2E,PCE,RdE,ImmExtE,PCPlus4E} = ExecuteOutData ;
+
+assign ExecuteInControl = {RegWriteD,ResultSrcD,MemWriteD,JumpD,BranchD,ALUCtlD,ALUSrcD};
+assign {RegWriteE,ResultSrcE,MemWriteE,JumpE,BranchE,ALUCtlE,ALUSrcE} = ExecuteOutControl ;
+
+// Memory Stages Signals
+
+wire [100:0] MemoryInData,MemoryOutData;
+wire [3:0] MemoryInControl,MemoryOutControl;
+
+assign MemoryInData = {ALUResultE,WriteDataE,RdE,PCPlus4E};
+assign  {ALUResultM,WriteDataM,RdM,PCPlus4M} = MemoryOutData ;
+
+assign MemoryInControl = {RegWriteE,ResultSrcE,MemWriteE};
+assign  {RegWriteM,ResultSrcM,MemWriteM} = MemoryOutControl ;
+
+
+// Write Back Signals
+
+wire [100:0] WriteBackInData,WriteBackOutData;
+wire [2:0] WriteBackInControl,WriteBackOutControl;
+
+assign WriteBackInData = {ALUResultM,ReadDataM,RdM,PCPlus4M};
+assign  {ALUResultW,ReadDataW,RdW,PCPlus4W} = WriteBackOutData ;
+
+assign WriteBackInControl = {RegWriteM,ResultSrcM};
+assign  {RegWriteW,ResultSrcW} = WriteBackOutControl ;
+
+
+
+
+
+
+//Fetch Logic 
+
 Mux2x1 #(
     .WIDTH(WIDHT)
 ) Mux2x1_PC(
@@ -61,25 +151,12 @@ PipelineReg #(
 ) Decode(
     .clk(clk),
     .rst(reset),
-    .d({InstrF,PCF,PCPlus4F}),
-    .q({InstrD,PCD,PCPlus4D})
+    .d(DecodeInData),
+    .q(DecodeOutData)
 );
 
+// Decode Logic
 
-wire [WIDHT-1:0]ResultW,ImmExtD,RD1D,RD2D;
-wire RegWriteD,MemWriteD,JumpD,BranchD,ALUSrcD,RegWriteW;
-wire [1:0]ResultSrcD,ImmSrcD;
-wire [3:0]ALUCtlD;
-
-wire [4:0]RdD,RdE,RdW,RdM;
-
-wire [WIDHT-1:0] RD1E,RD2E,PCE,ImmExtE,PCPlus4E;
-wire RegWriteE,MemWriteE,JumpE,BranchE,ALUSrcE;
-wire [1:0]ResultSrcE;
-wire [3:0]ALUCtlE;
-
-
-assign RdD = InstrD[11:7];
 
 
 ControlUnit ControlUnit(
@@ -118,22 +195,12 @@ PipelineReg #(
 ) Execute(
     .clk(clk),
     .rst(reset),
-    .d({RegWriteD,ResultSrcD,MemWriteD,JumpD,BranchD,ALUCtlD,ALUSrcD,RD1D,RD2D,PCD,RdD,ImmExtD,PCPlus4D}),
-    .q({RegWriteE,ResultSrcE,MemWriteE,JumpE,BranchE,ALUCtlE,ALUSrcE,RD1E,RD2E,PCE,RdE,ImmExtE,PCPlus4E})
+    .d({ExecuteInControl,ExecuteInData}),
+    .q({ExecuteOutControl,ExecuteOutData})
 );
 
 
-wire [WIDHT-1:0] SrcAE,SrcBE,WriteDataE,ALUResultE;
-wire ZeroE,AndOut;
-
-wire [WIDHT-1:0] ALUResultM,WriteDataM,PCPlus4M;
-wire RegWriteM,MemWriteM;
-wire [1:0]ResultSrcM;
-
-assign WriteDataE = RD2E;
-
-
-assign SrcAE = RD1E;
+// Execute Logic
 
 and AndGate(AndOut,BranchE,ZeroE);
 or OrGate(PCSrcE,AndOut,JumpE);
@@ -172,12 +239,12 @@ PipelineReg #(
 ) Memory(
     .clk(clk),
     .rst(reset),
-    .d({RegWriteE,ResultSrcE,MemWriteE,ALUResultE,WriteDataE,RdE,PCPlus4E}),
-    .q({RegWriteM,ResultSrcM,MemWriteM,ALUResultM,WriteDataM,RdM,PCPlus4M})
+    .d({MemoryInControl,MemoryInData}),
+    .q({MemoryOutControl,MemoryOutData})
 );
 
-wire [1:0]ResultSrcW;
-wire [WIDHT-1:0] ReadDataM,ReadDataW,ALUResultW,PCPlus4W;
+
+// Memory Logic
 
 DataMemory DataMemory(
     .A(ALUResultM),
@@ -187,13 +254,15 @@ DataMemory DataMemory(
     .RD(ReadDataM)
 );
 
+// Write Back Logic
+
 PipelineReg #(
     .WIDTH(104)
 ) WriteBack(
     .clk(clk),
     .rst(reset),
-    .d({RegWriteM,ResultSrcM,PCPlus4M,ALUResultM,ReadDataM,RdM}),
-    .q({RegWriteW,ResultSrcW,PCPlus4W,ALUResultW,ReadDataW,RdW})
+    .d({WriteBackInControl,WriteBackInData}),
+    .q({WriteBackOutControl,WriteBackOutData})
 );
 
 Mux3x1 #(
@@ -205,11 +274,6 @@ Mux3x1 #(
     .S(ResultSrcW),
     .Y(ResultW)
 );
-
-
-
-
-
 
 
 
