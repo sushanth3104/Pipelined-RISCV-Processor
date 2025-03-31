@@ -58,7 +58,7 @@ Adder #(
 
 PipelineReg #(
     .WIDTH(96)
-) Fetch(
+) Decode(
     .clk(clk),
     .rst(reset),
     .d({InstrF,PCF,PCPlus4F}),
@@ -115,7 +115,7 @@ ImmExtnd ImmExtnd(
 
 PipelineReg #(
     .WIDTH(176)
-) Decode(
+) Execute(
     .clk(clk),
     .rst(reset),
     .d({RegWriteD,ResultSrcD,MemWriteD,JumpD,BranchD,ALUCtlD,ALUSrcD,RD1D,RD2D,PCD,RdD,ImmExtD,PCPlus4D}),
@@ -169,7 +169,7 @@ ALU #(
 
 PipelineReg #(
     .WIDTH(105)
-) Execute(
+) Memory(
     .clk(clk),
     .rst(reset),
     .d({RegWriteE,ResultSrcE,MemWriteE,ALUResultE,WriteDataE,RdE,PCPlus4E}),
@@ -189,7 +189,7 @@ DataMemory DataMemory(
 
 PipelineReg #(
     .WIDTH(104)
-) Memory(
+) WriteBack(
     .clk(clk),
     .rst(reset),
     .d({RegWriteM,ResultSrcM,PCPlus4M,ALUResultM,ReadDataM,RdM}),
