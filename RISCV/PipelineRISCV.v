@@ -11,6 +11,8 @@
 `include "Mux2x1.v"
 `include "Mux3x1.v"
 `include "PipelineReg.v"
+`include "PipelineRegCLR.v"
+`include "PipelineRegENCLR.v"
 `include "HazardUnit.v"
 
 
@@ -123,6 +125,10 @@ wire [WIDHT-1:0] ForwardA,ForwardB; // Mux Data out Signals
 
 assign SrcAE = ForwardA;
 
+// For Lw Hazard Unit
+
+wire StallF,StallD,FlushD,FlushE;
+
 
 
 
@@ -144,6 +150,7 @@ Mux2x1 #(
 ProgramCounter ProgramCounter(
     .clk(clk),
     .reset(reset),
+    .Enable(StallF),
     .pc_in(PCFF),
     .pc_out(PCF)
 );
@@ -162,11 +169,13 @@ Adder #(
 );
 
 
-PipelineReg #(
+PipelineRegENCLR #(
     .WIDTH(96)
 ) Decode(
     .clk(clk),
     .rst(reset),
+    .clr(FlushD),
+    .Enable(StallD),
     .d(DecodeInData),
     .q(DecodeOutData)
 );
@@ -206,11 +215,12 @@ ImmExtnd ImmExtnd(
 );
 
 
-PipelineReg #(
+PipelineRegCLR #(
     .WIDTH(186)
 ) Execute(
     .clk(clk),
     .rst(reset),
+    .clr(FlushE),
     .d({ExecuteInControl,ExecuteInData}),
     .q({ExecuteOutControl,ExecuteOutData})
 );
@@ -318,6 +328,15 @@ HazardUnit HazardUnit(
     .Rs2E(Rs2E),
     .RdM(RdM),
     .RdW(RdW),
+    .Rs1D(Rs1D),
+    .Rs2D(Rs2D),
+    .RdE(RdE),
+    .ResultSrcE(ResultSrcE),
+    .PCSrcE(PCSrcE),
+    .FlushD(FlushD),
+    .StallF(StallF),
+    .StallD(StallD),
+    .FlushE(FlushE),
     .RegWriteM(RegWriteM),
     .RegWriteW(RegWriteW),
     .ForwardAE(ForwardAE),

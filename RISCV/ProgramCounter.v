@@ -2,7 +2,7 @@
 module ProgramCounter
        #( parameter WIDTH = 32)
        (
-        input clk,reset,
+        input clk,reset,Enable,
         input [WIDTH-1:0] pc_in,
         output [WIDTH-1:0] pc_out
        );
@@ -12,8 +12,9 @@ module ProgramCounter
 
     assign pc_out = temp;
 
-    always @(posedge clk ) begin
-        temp = reset ? 32'b0 : pc_in;
+    always @(posedge clk) begin
+        if(Enable) temp <=  temp ;
+        else temp <= reset ? 32'b0 : pc_in;
     end
 
 
